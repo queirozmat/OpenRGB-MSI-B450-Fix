@@ -104,8 +104,14 @@ GUI_INCLUDES        = $$unique(GUI_INCLUDES)
 GUI_H               = $$files("qt/*.h", true)
 GUI_CPP             = $$files("qt/*.cpp", true)
 
-CONTROLLER_H        = $$files("Controllers/*.h", true)
-CONTROLLER_CPP      = $$files("Controllers/*.cpp", true)
+contains(CONFIG, msi_b450_only) {
+    message("Building dedicated MSI B450 Tomahawk controller package")
+    CONTROLLER_H    = $$files("Controllers/MSIRGBController/*.h", true)
+    CONTROLLER_CPP  = $$files("Controllers/MSIRGBController/*.cpp", true)
+} else {
+    CONTROLLER_H    = $$files("Controllers/*.h", true)
+    CONTROLLER_CPP  = $$files("Controllers/*.cpp", true)
+}
 
 for(iter, $$list($$CONTROLLER_H)) {
     CONTROLLER_INCLUDES += $$dirname(iter)

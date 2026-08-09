@@ -28,7 +28,7 @@ jobs:
 
       - name: Configure release build
         shell: cmd
-        run: qmake OpenRGB.pro CONFIG-=debug_and_release CONFIG+=release
+        run: qmake OpenRGB.pro CONFIG-=debug_and_release CONFIG+=release CONFIG+=msi_b450_only
 
       - name: Compile release build
         shell: cmd
