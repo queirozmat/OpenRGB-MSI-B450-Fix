@@ -16,7 +16,7 @@
 #include "LogManager.h"
 #include "super_io.h"
 
-static const std::chrono::seconds MSI_RGB_RECOVERY_INTERVAL(30);
+static const std::chrono::seconds MSI_RGB_RECOVERY_INTERVAL(5);
 
 MSIRGBController::MSIRGBController(int sioaddr, bool invert, bool enable_recovery, std::string dev_name)
 {
@@ -42,6 +42,13 @@ MSIRGBController::MSIRGBController(int sioaddr, bool invert, bool enable_recover
 
 void MSIRGBController::InitializeHardware()
 {
+    /*-----------------------------------------------------*\
+    | A full detector rescan always unlocks Extended        |
+    | Function Mode before touching the MSI RGB registers.  |
+    | The Super I/O may leave this mode while OpenRGB keeps |
+    | running, causing later writes to be silently ignored. |
+    \*-----------------------------------------------------*/
+    superio_enter(msi_sioaddr);
 
     /*-----------------------------------------------------*\
     | This setup step isn't well documented                 |
