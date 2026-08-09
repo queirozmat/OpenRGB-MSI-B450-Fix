@@ -114,7 +114,8 @@ void DetectMSIRGBControllers()
             {
                 if (board_dmi.find(std::string(compatible_devices[i].name)) != std::string::npos)
                 {
-                    MSIRGBController*     controller     = new MSIRGBController(sioaddr, compatible_devices[i].invert, "MSI " + board_dmi);
+                    const bool            enable_recovery = board_dmi.find("7C02") != std::string::npos;
+                    MSIRGBController*     controller      = new MSIRGBController(sioaddr, compatible_devices[i].invert, enable_recovery, "MSI " + board_dmi);
                     RGBController_MSIRGB* rgb_controller = new RGBController_MSIRGB(controller);
 
                     ResourceManager::get()->RegisterRGBController(rgb_controller);

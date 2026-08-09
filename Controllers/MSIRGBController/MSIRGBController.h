@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <string>
 
 #define MSI_SIO_LOGDEV_RGB      0x12
@@ -42,7 +43,7 @@ enum
 class MSIRGBController
 {
 public:
-    MSIRGBController(int sioaddr, bool invert, std::string dev_name);
+    MSIRGBController(int sioaddr, bool invert, bool enable_recovery, std::string dev_name);
     ~MSIRGBController();
 
     std::string     GetDeviceName();
@@ -53,6 +54,13 @@ public:
 
     void            SetColor(unsigned char red, unsigned char green, unsigned char blue);
 private:
+    void            InitializeHardware();
+    void            EnsureInitialized();
+
     int             msi_sioaddr;
     std::string     name;
+    bool            invert_colors;
+    bool            recovery_enabled;
+    unsigned char   expected_cfg_3;
+    std::chrono::steady_clock::time_point next_recovery;
 };

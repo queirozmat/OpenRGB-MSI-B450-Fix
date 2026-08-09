@@ -13,12 +13,35 @@
 
 #include "MSIRGBController.h"
 #include "dmiinfo.h"
+#include "LogManager.h"
 #include "super_io.h"
 
-MSIRGBController::MSIRGBController(int sioaddr, bool invert, std::string dev_name)
+static const std::chrono::seconds MSI_RGB_RECOVERY_INTERVAL(30);
+
+MSIRGBController::MSIRGBController(int sioaddr, bool invert, bool enable_recovery, std::string dev_name)
 {
-    msi_sioaddr = sioaddr;
-    name        = dev_name;
+    msi_sioaddr       = sioaddr;
+    name              = dev_name;
+    invert_colors     = invert;
+    recovery_enabled  = enable_recovery;
+    expected_cfg_3    = 0b11100010;
+
+    if(invert_colors)
+    {
+        expected_cfg_3 |= 0b00011100;
+    }
+
+    InitializeHardware();
+    next_recovery = std::chrono::steady_clock::now() + MSI_RGB_RECOVERY_INTERVAL;
+
+    if(recovery_enabled)
+    {
+        LOG_INFO("[%s] Enabled lightweight MSI-RGB controller recovery", name.c_str());
+    }
+}
+
+void MSIRGBController::InitializeHardware()
+{
 
     /*-----------------------------------------------------*\
     | This setup step isn't well documented                 |
@@ -56,18 +79,36 @@ MSIRGBController::MSIRGBController(int sioaddr, bool invert, std::string dev_nam
     /*--------------------------------------------------------------*\
     | Header on, pulse deactivated, colors inverted depending on DMI |
     \*--------------------------------------------------------------*/
-    unsigned char ff_val = 0b11100010;
-
-    if (invert)
-    {
-        ff_val |= 0b00011100;
-    }
-
-    superio_outb(msi_sioaddr, MSI_SIO_RGB_REG_CFG_3, ff_val);
+    superio_outb(msi_sioaddr, MSI_SIO_RGB_REG_CFG_3, expected_cfg_3);
     /*-----------------------------------------------------------*\
     | This seems to be related to some rainbow mode. Deactivated  |
     \*-----------------------------------------------------------*/
     superio_outb(msi_sioaddr, 0xFD, 0x00);
+}
+
+void MSIRGBController::EnsureInitialized()
+{
+    if(!recovery_enabled)
+    {
+        return;
+    }
+
+    const std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+
+    if(now < next_recovery)
+    {
+        return;
+    }
+
+    next_recovery = now + MSI_RGB_RECOVERY_INTERVAL;
+
+    /*-----------------------------------------------------*\
+    | A full OpenRGB rescan reconstructs this controller and|
+    | repeats these initialization writes.  Repeating only  |
+    | the MSI-RGB setup avoids global device enumeration and |
+    | SDK device-list notifications.                         |
+    \*-----------------------------------------------------*/
+    InitializeHardware();
 }
 
 MSIRGBController::~MSIRGBController()
@@ -89,6 +130,8 @@ std::string MSIRGBController::GetDeviceName()
 
 void MSIRGBController::SetColor(unsigned char red, unsigned char green, unsigned char blue)
 {
+    EnsureInitialized();
+
     /*-----------------------------------------------------*\
     | The MSI RGB controller uses 4 bits per color rather   |
     | than 8.  Shift the values by 4 so that the 4 most     |

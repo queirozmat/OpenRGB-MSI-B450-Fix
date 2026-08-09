@@ -1,0 +1,45 @@
+name: Build MSI B450 Windows package
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/msi-7c02-lightweight-recovery
+
+jobs:
+  build-windows-64:
+    runs-on: windows-2022
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Qt 5.15.2
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 5.15.2
+          arch: win64_msvc2019_64
+          cache: true
+
+      - name: Configure MSVC x64
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure release build
+        shell: cmd
+        run: qmake OpenRGB.pro CONFIG-=debug_and_release CONFIG+=release
+
+      - name: Compile release build
+        shell: cmd
+        run: nmake
+
+      - name: Deploy Qt runtime
+        shell: cmd
+        run: windeployqt --no-patchqt --no-quick-import --no-translations --no-system-d3d-compiler --no-compiler-runtime --no-opengl-sw --no-network release
+
+      - name: Upload portable package
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenRGB-1.0rc2wr0-MSI-B450-Tomahawk
+          path: release/
+          if-no-files-found: error
