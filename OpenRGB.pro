@@ -125,14 +125,16 @@ CONTROLLER_INCLUDES = $$unique(CONTROLLER_INCLUDES)
 # The suffixes _Windows, _Linux, _FreeBSD, and _MacOS are usable to denote that a file only     #
 # applies to one or more OSes.  The suffixes may be combined such as <file>_Windows_Linux.cpp.  #
 #-----------------------------------------------------------------------------------------------#
-CONTROLLER_H_WINDOWS    = $$files("Controllers/*_Windows*.h",   true)
-CONTROLLER_CPP_WINDOWS  = $$files("Controllers/*_Windows*.cpp", true)
-CONTROLLER_H_LINUX      = $$files("Controllers/*_Linux*.h",     true)
-CONTROLLER_CPP_LINUX    = $$files("Controllers/*_Linux*.cpp",   true)
-CONTROLLER_H_FREEBSD    = $$files("Controllers/*_FreeBSD*.h",   true)
-CONTROLLER_CPP_FREEBSD  = $$files("Controllers/*_FreeBSD*.cpp", true)
-CONTROLLER_H_MACOS      = $$files("Controllers/*_MacOS*.h",     true)
-CONTROLLER_CPP_MACOS    = $$files("Controllers/*_MacOS*.cpp",   true)
+!contains(CONFIG, msi_b450_only) {
+    CONTROLLER_H_WINDOWS    = $$files("Controllers/*_Windows*.h",   true)
+    CONTROLLER_CPP_WINDOWS  = $$files("Controllers/*_Windows*.cpp", true)
+    CONTROLLER_H_LINUX      = $$files("Controllers/*_Linux*.h",     true)
+    CONTROLLER_CPP_LINUX    = $$files("Controllers/*_Linux*.cpp",   true)
+    CONTROLLER_H_FREEBSD    = $$files("Controllers/*_FreeBSD*.h",   true)
+    CONTROLLER_CPP_FREEBSD  = $$files("Controllers/*_FreeBSD*.cpp", true)
+    CONTROLLER_H_MACOS      = $$files("Controllers/*_MacOS*.h",     true)
+    CONTROLLER_CPP_MACOS    = $$files("Controllers/*_MacOS*.cpp",   true)
+}
 
 CONTROLLER_H           -= $$CONTROLLER_H_WINDOWS
 CONTROLLER_H           -= $$CONTROLLER_H_LINUX
